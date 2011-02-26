@@ -20,6 +20,23 @@ class String
 
 end
 
+class FixNum
+
+  def to_date
+    time = Time.at(self)
+    "#{time.month}/#{time.day}/#{time.year}"
+  end
+
+  def to_time
+    "#{time.hour}:#{time.second}"
+  end
+
+  def to_date_time
+    self.to_date + " " + self.to_time
+  end
+
+end
+
 class DropboxHelper
 
   def self.get_todo_list(settings)
@@ -68,7 +85,16 @@ class Todo
   end
 
   def self.history(length = nil)
-    
+    items = (length.nil?) ? parse_todo : parse_todo(length)
+
+    items.each_with_index do |item, list_number|
+      date   = item[:date].to_date_time
+      status = item[:status].to_s.capitalize
+      item   = item[:item]
+
+      puts "#{list_number}. #{date} - #{status} - #{item}"
+    end
+
     abort
   end
 
