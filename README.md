@@ -18,4 +18,5 @@ Usage
     - `todo help`
     - `todo history`
     - `todo history 20`
+    - `todo sync`
     

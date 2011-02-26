@@ -53,8 +53,13 @@ class DropboxHelper
     return get_todo_list_online
   end
   
-  def upload_todo_list
-    upload_todo_list_online unless File.exists? get_local_todo_path
+  def upload_todo_list(todo_list = nil)
+    if todo_list.nil?
+      upload_todo_list_online unless File.exists? get_local_todo_path
+    else
+      return upload_todo_list_offline(todo_list) if File.exists? get_local_todo_path
+      return upload_todo_list_online(todo_list)
+    end
   end
 
   def get_todo_list_offline
@@ -81,6 +86,10 @@ class DropboxHelper
         File.delete(local_path)
       end
     end
+  end
+
+  def upload_todo_list_offline(todo_list)
+    File.open(get_local_todo_path, "w") { |file| file.print todo_list }
   end
 
   def get_session
@@ -136,7 +145,11 @@ class Todo
   end
 
   def add(thing)
-
+    todo_list = @dropbox.get_todo_list
+    new_item = "#{Time.now.to_i} ^ #{thing}\n"
+    todo_list = new_item + todo_list
+    
+    @dropbox.upload_todo_list(todo_list)
     abort
   end
 
