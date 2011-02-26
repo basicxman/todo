@@ -82,7 +82,7 @@ class Todo
     abort
   end
 
-  def parse_todo(limit = 200)
+  def self.parse_todo(limit = 200)
     todo = DropboxHelper::get_todo_list
     todo = todo.split("\n")
     todo = todo[0...limit] if limit > todo.length
