@@ -40,13 +40,34 @@ end
 
 class DropboxHelper
 
-  def self.get_todo_list(settings)
-    session = get_session(settings)
-    session.download(settings["todo_path"])
+  def initialize(settings)
+    @settings = settings
+  end
+
+  def get_local_todo_path
+    File.expand_path(@settings["dropbox_path"] + "/" + @settings["todo_path"])
+  end
+
+  def get_todo_list
+    return get_todo_list_offline if File.exists? get_local_todo_path
+    return get_todo_list_online
+  end
+  
+  def upload_todo_list
+    upload_todo_list_online unless File.exists? get_local_todo_path
+  end
+
+  def get_todo_list_offline
+    File.read(get_local_todo_path)
+  end
+
+  def get_todo_list_online
+    session = get_session
+    session.download(@settings["todo_path"])
   end
 
 
-  def self.upload_todo_list(settings, todo_list)
+  def upload_todo_list_online(todo_list)
     local_path = "todo_tmp_#{Time.now.to_i}.txt"
     File.open(local_path, "w") { |file| file.print todo_list }
 
@@ -58,13 +79,13 @@ class DropboxHelper
     end
   end
 
-  def self.get_session(settings)
+  def get_session
     opts = {
       :ssl => true,
-      :authorizing_user => settings["username"],
-      :authorizing_password => settings["password"]
+      :authorizing_user => @settings["username"],
+      :authorizing_password => @settings["password"]
     }
-    session = Dropbox::Session.new(settings["dropbox_key"], settings["dropbox_secret"], opts)
+    session = Dropbox::Session.new(@settings["dropbox_key"], @settings["dropbox_secret"], opts)
     session.mode = :dropbox
     session.authorize!
 
@@ -76,7 +97,7 @@ end
 class Todo
 
   def initialize(settings)
-    @settings = settings
+    @dropbox  = DropboxHelper.new(settings)
   end
 
   def help
@@ -114,7 +135,7 @@ class Todo
   end
 
   def parse_todo(limit = 200)
-    todo = DropboxHelper::get_todo_list(@settings)
+    todo = @dropbox.get_todo_list
     todo = todo.split("\n")
     todo = todo[0...limit] if limit > todo.length
 
