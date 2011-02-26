@@ -5,6 +5,41 @@
 
 require 'dropbox'
 
+class DropboxHelper
+
+  def self.get_todo_list(settings)
+    session = get_session
+    session.download(settings["todo_path"])
+  end
+
+
+  def self.upload_todo_list(settings, todo_list)
+    local_path = "todo_tmp_#{Time.now.to_i}.txt"
+    File.open(local_path, "w") { |file| file.print todo_list }
+
+    session = get_session
+    session.upload(local_path, settings["todo_path"])
+    
+    if settings["remove_tmp_upload_files"]
+      File.delete(local_path)
+    end
+  end
+
+  def self.get_session(settings)
+    opts = {
+      :ssl => true,
+      :authorizing_user => settings["username"],
+      :authorizing_password => settings["password"]
+    }
+    session = Dropbox::Session.new(settings["dropbox_key"], settings["dropbox_secret"], opts)
+    session.mode = :dropbox
+    session.authorize!
+
+    session
+  end
+
+end
+
 class Todo
 
   def self.help
@@ -32,13 +67,27 @@ class Todo
     abort
   end
 
+  def parse_todo(limit = 500)
+    todo = DropboxHelper::get_todo_list
+  end
+
 end
 
 class Console
 
   def initialize
-    abort "Todo configuration file does not exist." unless File.exists? File.expand_path('~/.todo_config.json')
+    get_configuration
     application_controller 
+  end
+
+  def get_configuration
+    abort "Todo configuration file does not exist." unless File.exists? configuration_path 
+    @settings = JSON.parse(File.read(configuration_path))
+    abort if @settings.nil?
+  end
+
+  def configuration_path
+    File.expand_path('~/.todo_config.json')
   end
 
   def application_controller
