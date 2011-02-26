@@ -45,7 +45,7 @@ class DropboxHelper
   end
 
   def get_local_todo_path
-    File.expand_path(@settings["dropbox_path"] + "/" + @settings["todo_path"])
+    File.expand_path(@settings["dropbox_path"] + @settings["todo_path"] + @settings["todo_name"])
   end
 
   def get_todo_list
@@ -66,16 +66,20 @@ class DropboxHelper
     session.download(@settings["todo_path"])
   end
 
-
-  def upload_todo_list_online(todo_list)
-    local_path = "todo_tmp_#{Time.now.to_i}.txt"
-    File.open(local_path, "w") { |file| file.print todo_list }
-
+  def upload_todo_list_online(todo_list = nil)
     session = get_session
-    session.upload(local_path, settings["todo_path"])
+
+    if todo_list.nil?
+      session.upload(get_local_todo_path, @settings["todo_path"])
+    else
+      local_path = "todo_tmp_#{Time.now.to_i}.txt"
+      File.open(local_path, "w") { |file| file.print todo_list }
+
+      session.upload(local_path, @settings["todo_path"])
     
-    if settings["remove_tmp_upload_files"]
-      File.delete(local_path)
+      if @settings["remove_tmp_upload_files"]
+        File.delete(local_path)
+      end
     end
   end
 
@@ -107,6 +111,13 @@ class Todo
     puts "todo history 30 - List the last thirty items."
     puts "todo add \"Take out trash.\" - Add an item to the todo list."
     puts "todo done \"trash\" - Finish an item."
+    puts "todo sync - Manually upload local copy of todo list to Dropbox."
+    abort
+  end
+
+  def sync
+    puts "Uploading #{@dropbox.get_local_todo_path} to Dropbox."
+    @dropbox.upload_todo_list_online
     abort
   end
 
@@ -177,8 +188,9 @@ class Console
     if ARGV.length == 1
       arg = ARGV[0]
 
-      todo.help    if arg == "help" or arg == "?"
+      todo.help    if arg == "help"    or arg == "?"
       todo.history if arg == "history" or arg == "h"
+      todo.sync    if arg == "sync"    or arg == "s"
     else
       arg = ARGV[0]
       second = ARGV[1]

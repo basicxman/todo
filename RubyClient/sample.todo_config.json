@@ -4,6 +4,7 @@
   "dropbox_key": "INSERT DROPBOX API KEY",
   "dropbox_secret": "INSERT DROPBOX SECRET KEY",
   "remove_tmp_upload_files", "yes",
-  "todo_path": "todo.txt",
+  "todo_name": "todo.txt",
+  "todo_path": "/",
   "dropbox_path": "~/Dropbox"
 }
