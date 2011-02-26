@@ -5,6 +5,21 @@
 
 require 'dropbox'
 
+class String
+  
+  def status_as_sym
+    return case self
+      when "$" then :complete
+      when "^" then :incomplete
+    end
+  end
+
+  def get_list_item
+    return self.gsub(/[0-9]{10}\s+[\^\$]\s+/, "")
+  end
+
+end
+
 class DropboxHelper
 
   def self.get_todo_list(settings)
@@ -53,7 +68,7 @@ class Todo
   end
 
   def self.history(length = nil)
-
+    
     abort
   end
 
@@ -67,8 +82,23 @@ class Todo
     abort
   end
 
-  def parse_todo(limit = 500)
+  def parse_todo(limit = 200)
     todo = DropboxHelper::get_todo_list
+    todo = todo.split("\n")
+    todo = todo[0...limit] if limit > todo.length
+
+    parsed_todo = []
+    todo.each do |item|
+      args = item.split(" ")
+      temp = {
+        :date => args[0],
+        :status => args[1].status_as_sym
+        :item => item.get_list_item
+      }
+      parsed_todo << temp
+    end
+
+    parsed_todo
   end
 
 end
