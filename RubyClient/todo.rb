@@ -20,7 +20,7 @@ class String
 
 end
 
-class FixNum
+class Fixnum
 
   def to_date
     time = Time.at(self)
@@ -28,7 +28,8 @@ class FixNum
   end
 
   def to_time
-    "#{time.hour}:#{time.second}"
+    time = Time.at(self)
+    "#{time.hour}:#{time.sec}"
   end
 
   def to_date_time
@@ -40,7 +41,7 @@ end
 class DropboxHelper
 
   def self.get_todo_list(settings)
-    session = get_session
+    session = get_session(settings)
     session.download(settings["todo_path"])
   end
 
@@ -74,7 +75,11 @@ end
 
 class Todo
 
-  def self.help
+  def initialize(settings)
+    @settings = settings
+  end
+
+  def help
     puts "Todo Help"
     puts "todo list - List all current uncompleted items."
     puts "todo history - List all items."
@@ -84,11 +89,11 @@ class Todo
     abort
   end
 
-  def self.history(length = nil)
+  def history(length = nil)
     items = (length.nil?) ? parse_todo : parse_todo(length)
 
     items.each_with_index do |item, list_number|
-      date   = item[:date].to_date_time
+      date   = item[:date].to_i.to_date_time
       status = item[:status].to_s.capitalize
       item   = item[:item]
 
@@ -98,18 +103,18 @@ class Todo
     abort
   end
 
-  def self.add(thing)
+  def add(thing)
 
     abort
   end
 
-  def self.done(search)
+  def done(search)
  
     abort
   end
 
-  def self.parse_todo(limit = 200)
-    todo = DropboxHelper::get_todo_list
+  def parse_todo(limit = 200)
+    todo = DropboxHelper::get_todo_list(@settings)
     todo = todo.split("\n")
     todo = todo[0...limit] if limit > todo.length
 
@@ -118,7 +123,7 @@ class Todo
       args = item.split(" ")
       temp = {
         :date => args[0],
-        :status => args[1].status_as_sym
+        :status => args[1].status_as_sym,
         :item => item.get_list_item
       }
       parsed_todo << temp
@@ -147,21 +152,22 @@ class Console
   end
 
   def application_controller
+    todo = Todo.new(@settings)
     if ARGV.length == 1
       arg = ARGV[0]
 
-      Todo::help    if arg == "help" or arg == "?"
-      Tood::history if arg == "history" or arg == "h"
+      todo.help    if arg == "help" or arg == "?"
+      todo.history if arg == "history" or arg == "h"
     else
       arg = ARGV[0]
       second = ARGV[1]
 
-      Todo::history(second) if arg == "history" or arg == "h"
-      Todo::add(second)     if arg == "add"     or arg == "a"
-      Todo::done(second)    if arg == "done"    or arg == "d" or arg == "finish" or arg == "f" or arg == "-"
+      todo.history(second) if arg == "history" or arg == "h"
+      todo.add(second)     if arg == "add"     or arg == "a"
+      todo.done(second)    if arg == "done"    or arg == "d" or arg == "finish" or arg == "f" or arg == "-"
     end
 
-    Todo::help
+    todo::help
   end
 
 end
