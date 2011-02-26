@@ -3,6 +3,8 @@
 # @author: Andrew Horsman [basicxman]
 # @description: A very simple todo that syncs with Dropbox.  Ruby client.
 
+require 'dropbox'
+
 class Todo
 
   def self.help
@@ -17,14 +19,17 @@ class Todo
 
   def self.history(length = nil)
 
+    abort
   end
 
   def self.add(thing)
 
+    abort
   end
 
   def self.done(search)
-  
+ 
+    abort
   end
 
 end
@@ -32,6 +37,7 @@ end
 class Console
 
   def initialize
+    abort "Todo configuration file does not exist." unless File.exists? File.expand_path('~/.todo_config.json')
     application_controller 
   end
 
@@ -46,11 +52,11 @@ class Console
       second = ARGV[1]
 
       Todo::history(second) if arg == "history" or arg == "h"
-      Todo::add(second)     if arg == "add" or arg == "a"
-      Todo::done(second)    if arg == "done" or arg == "d" or arg == "finish" or arg == "f" or arg == "-"
+      Todo::add(second)     if arg == "add"     or arg == "a"
+      Todo::done(second)    if arg == "done"    or arg == "d" or arg == "finish" or arg == "f" or arg == "-"
     end
 
-    help
+    Todo::help
   end
 
 end
